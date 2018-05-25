@@ -47,11 +47,11 @@ Docker Swarm은 여러 요소들로 구성되는데 이 요소들에 대해 간�
 
 *구성 요소들에 대한 설명은 공식문서를 참고하여 작성하였다.*
 
- ## 1. swarm  
+### 1. swarm  
  
  위에서도 설명했지만, 분산된 컨테이너를 실행 할 수 있는 클러스터이다.
 
- ## 2. node 
+### 2. node 
 
 node란 swarm에 참여하는 docker engine의 인스턴스이다. 또한 이를 docker node라고 볼 수 있다. 
 
@@ -69,7 +69,7 @@ cluster management 기능을 수행한다.
 위에서 설명한대로, manager node는 worker node에게 task를 전달하고 실행시킨다.
 default로, manager node는 service를 worker node에 실행하도록 하지만 manager-only하게 service를 실행하도록 구성할 수 있다.
 
- ## 3. Service and Task 
+### 3. Service and Task 
 
 service는, manager node 또는 worker node에서 실행되는 task의 정의이다. 
 service를 create할때 container에서 사용할 image와 실행할 command를 지정한다.
@@ -82,7 +82,7 @@ replicate task를 deploy한다.
 Manager node는 service scale에 설정된 replica 수 에 따라 task를 worker node에 할당한다.
 task가 node에 할당되면 다른 node로 이동할 수 없다.
 
- ## 4. Load balancing 
+### 4. Load balancing 
 
 swarm manager는 Load balancing을 통해 외부에서 사용할수 있도록 service를 swarm에 노출한다.
 
