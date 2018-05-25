@@ -48,27 +48,34 @@ Orchestration과 Docker Swarm에 대해 알아보았고, Component 또한 어느
 ![image](https://user-images.githubusercontent.com/20153890/40533128-b3342792-603c-11e8-8988-5a7d6ab31280.png)
 
 
-이제 Swarm을 만들어보자.
+## Swarm
 
 공식 문서에는 docker-machine을 이용해서 manager node를 실행시키고 ssh로 machine에 접속하라는 형태로 쓰여 있는데
-
 linux host라면 docker-machine 구성이 필요 없다.
 
-1. swarm을 구성해 보자 
+### 1. intializing a cluster of Docker Engines in swarm mode
 
 > - $docker swarm init --advertise-addr [MANAGER-IP]
 
-manager node로 사용할 Server에 명령어를 실행한다. [MANAGER-IP] 부분에 manager node 로 사용할 IP를 입력하면 된다.
+manager node로 사용할 linux host server에 위 command를 실행한다. [MANAGER-IP] 부분에 manager node 로 사용할 IP를 입력하면 된다.
 
 ![image](https://user-images.githubusercontent.com/20153890/40534751-0bfa467c-6042-11e8-80cb-4ad6b612a9ec.png)
 
 --advertise-addr flag는 manager node가 자신의 address를 192.168.10.174로 게시하도록 한다.
 
-실행 결과 중간에 새로운 node가 swarm에 join할수 있는 command(token을 포함한)를 포함하고 있다. 또 다른 node는 manager나 worker로 swarm에 join할 것이고, 
+실행 결과, 중간에 새로운 node가 swarm에 join할수 있는 command(token을 포함한)를 포함하고 있다. 또 다른 node는 manager나 worker로 swarm에 join할 것이고, 
 중간에 나와있는 docker swarm join --token ~~ command를 node로 지정할 server에서 실행시키면 된다.
 
-여기서는 4개의 worker node를 사용할 것 이므로 worker로 사용 예정중인 Server 4개에 command를 실행하면 된다.
-swarm에 join시킬 command를 잊었다면, $docker swarm join-token manager 를 manager node server에서 실행하면 된다.
+### 2. adding nodes to the swarm
 
-worker node로 사용할 4개의 Server에서 command를 실행 후, 4개의 worker node가 swarm에 join 되었다면, 
+여기서는 4개의 worker node를 사용할 것 이므로 worker로 사용 예정중인 linux host server 4개에 각각 docker swarm join --token ~~ command를 실행하면 된다.
+swarm에 join시킬 command를 잊었다면, $docker swarm join-token manager 를 manager node server에서 실행하면 확인할 수 있다.
 
+worker node로 사용할 4개의 Server에서 command를 실행 후, 4개의 worker node가 swarm에 join 되었다면, manager node server에서 다음 명령어를 실행하자.
+
+> - $docker node ls 
+
+![image](https://user-images.githubusercontent.com/20153890/40535271-918f8dc8-6043-11e8-86da-4219bf45cfeb.png)
+
+MANAGER STATUS column을 확인하면, Leader로 지정된 node를 확인할 수 있다. 이는 manager node임을 뜻한다.
+그리고 4개의 worker node가 추가되어져 있는 것을 확인할 수 있을 것이다. 
