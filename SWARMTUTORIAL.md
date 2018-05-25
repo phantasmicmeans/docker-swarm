@@ -61,15 +61,10 @@ linux host라면 docker-machine 구성이 필요 없다.
 > - $docker swarm init --advertise-addr <MANAGER-IP>
 <MANAGER-IP> 부분에 SWARM HOST로 사용할 IP를 입력하면 된다.
 
-명령어 실행시 
-'''
-Swarm initialized: current node (dxn1zf6l61qsb1josjja83ngz) is now a manager.
+![image](https://user-images.githubusercontent.com/20153890/40534399-e1249cbe-6040-11e8-8e85-414edb37eeb1.png)
 
-To add a worker to this swarm, run the following command:
+--advertise-addr flag는 manager node address가 192.168.10.174를 가지도록 한다.
 
-    docker swarm join \
-    --token SWMTKN-1-49nj1cmql0jkz5s954yi3oex3nedyz0fb0xx14ie39trti4wxv-8vxv8rssmk743ojnwacrr2e7c \
-    192.168.99.100:2377
+그리고 새로운 node가 swarm에 join할수 있는 command를 포함하고 있다. node는 manager나 worker로 swarm에 join할 것이고, 
+중간에 나와있는 docker swarm join --token ~~ command를 node로 지정할 server에서 실행시키면 된다.
 
-To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.
-'''
