@@ -24,7 +24,6 @@ Docker Swarm은 다른 Tool에 비해 구축 비용도 적고, 사용하거나 �
 ![image](https://user-images.githubusercontent.com/20153890/40529551-694425bc-6030-11e8-8eb3-0164551e020b.png)
 
 Docker Host Pool을 단일 가상 Docker Host로 전환해 준다. 
-
 공식 문서는 **"The cluster management and orchestration features embedded in the
 Docker Engine are built using swarmkit"** 라고 말한다.
  
@@ -35,7 +34,6 @@ Docker Engine are built using swarmkit"** 라고 말한다.
 시작하기 전 docker version을 update하자.
 
 먼저 각각의 docker host들은 swarm manager 또는 worker(service) 역할을 수행할 수 있다.
-
 그리고 Swarm은 swarm mode에서 실행되는 manager와 worker(swarm service)로 동작하는 
 여러 Docker hosts를 포함한다.
 
@@ -67,8 +65,7 @@ cluster management 기능을 수행한다.
 또한 manager node는 orchestration 을 수행할 node들의 leader를 뽑는다.
 
 위에서 설명한대로, manager node는 worker node에게 task를 전달하고 실행시킨다.
-default로, manager node는 service를 worker node에 실행하도록 하지만,  
-manager-only하게 service를 실행하도록 구성할 수 있다.
+default로, manager node는 service를 worker node에 실행하도록 하지만 manager-only하게 service를 실행하도록 구성할 수 있다.
 
  ### 3. Service and Task ###
 
