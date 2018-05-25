@@ -57,29 +57,23 @@ node란 swarm에 참여하는 docker engine의 인스턴스이다. 또한 이를
 
 manager node와 worker node로 구성되고, manager node는 swarm cluster를 관리하는 node이다.
 worker node는 manager node의 명령을 받아 container를 서비스하는 node라 이해하면 된다.
-
 하나의 computer나 cloud 서버에서 하나 이상의 node를 실행 가능 하지만,
 일반적으로 swarm 배포에는 여러 클라우드 서버에 분산된 docker node가 포함된다
 
 하나의 application을 swarm에 deploy하려면 service 정의를 manager에게 전달해야 한다.
 그리고 manager node는 task라는 작업 단위를 worker node에게 전달한다.
-
-그리고 manager node는 원하는 swarm 상태를 유지하는데 필요한 orchestration 및
+ manager node는 원하는 swarm 상태를 유지하는데 필요한 orchestration 및
 cluster management 기능을 수행한다.
- 
-그리고 manager node는 orchestration 을 수행할 node들의 leader를 뽑는다.
+또한 manager node는 orchestration 을 수행할 node들의 leader를 뽑는다.
 
 위에서 설명한대로, manager node는 worker node에게 task를 전달하고 실행시킨다.
-
 default로, manager node는 service를 worker node에 실행하도록 하지만,  
 manager-only하게 service를 실행하도록 구성할 수 있다.
 
  ### 3. Service and Task ###
 
-service는, manager node 또는 worker node에서 실행되는 task의 정의이다.
-
+service는, manager node 또는 worker node에서 실행되는 task의 정의이다. 
 service를 create할때 container에서 사용할 image와 실행할 command를 지정한다.
-
 replicate된 service 에서는 swarm manager가 설정한 비율에 따라 node사이에 특정 수의
 replicate task를 deploy한다.
 
@@ -101,6 +95,8 @@ swarm manager는 내부 load balancing을 통해 service의 DNS 이름에 따라
 cluster내의 service간 요청을 분산한다.
 
 지금까지 Docker Swarm의 개념과, 구성요소에 대해 살펴보았다.
+
+## Swarm Tutorial ##
 
 그럼 이제 Docker CLI를 통해 swarm을 만들고, swarm에 service application을 deploy 해보자.
 
