@@ -2,6 +2,8 @@ Docker Swarm Tutorial
 =====================
 *by s.m.Lee*
 
+![image](https://user-images.githubusercontent.com/20153890/40535846-41728da2-6045-11e8-87c7-e301beac3c46.png)
+
 Orchestration과 Docker Swarm에 대해 알아보았고, Component 또한 어느정도 이해가 되었을 것이라 생각한다.
 그럼 이제 Swarm을 구성하여 보고, service를 deploy 하자.
 
