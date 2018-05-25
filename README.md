@@ -1,505 +1,143 @@
-Alarm Service 
+Docker Swarm
 ==============
 
 by S.M.Lee
 
+## Orchestration  ##
 
-![image](https://user-images.githubusercontent.com/20153890/40037190-cfd1ca38-5846-11e8-8443-a00a08a57fb5.png)
+서버 오케스트레이션을 간단하게 정의하면 "여러 서버와 서비스를 편리하게 관리하는 작업" 이라 볼 수 
+있을 것이다. 뭐 간단하게 말하면 이런 형태지만 scheduling, clustering, service discovery, loggin, monitoring 등
+여러 작업을 해야한다.
 
-> **NOTE** 
-> - 여기서는 MSA에서의 Service중 하나인 Alarm Service를 구축하여 본다.
-> - Alarm Service는 API Server로 구성되고, Spring Cloud Netflix의 여러 instance들을 사용한다. 
-> - Alarm Service는 Spring boot Project로 구현된다. 생성된 JAR파일을 Docker container로 띄워 서비스한다.
-> - 기존 Spring에서는 Maven, Gradle등의 dependency tool을 이용해 WAR파일을 생성한 후 tomcat같은 WAS에 배포하여
-웹 어플리케이션을 구동하였으나, Spring boot는 JAR파일에 내장 tomcat이 존재하여, 단순히 JAR파일을 빌드하고 실행하는 것 만으로 웹 어플리케이션 구동이 가능하다.
-> - JPA repository로 DB에 접근한다.
+많은 수의 서버들이 전부 Docker Container로 띄워져 있고, 이 Docker Host들을 
+엮어서 마치 하나의 서버처럼 다루고 많은 것을 자동화 한다면 관리적인 측면에 있어 좋지 않을까?
 
-**Service는 "Service Register & Discovery" Server인 Eureka Server의 Client이다.**
+여기서는 Clustering Tool, 즉 Container Orchestration Tool(대표적 Kubernetes) 하나인 Docker Swarm에 대해 알아보겠다.
 
+본래 Orchestration Tool은 수백, 수천대의 서버들을 관리하기 위한 목적으로 만들어졌기에 
+적은 양의 서버를 관리하기 위해 Orchestration Tool을 도입하는 것은 비용적인 부분이나, 인적 자원 낭비라고도 볼 수 있지만..
 
+Docker Swarm은 다른 Tool에 비해 구축 비용도 적고, 사용하거나 관리하기 쉽기에 Swarm을 사용해 보려고 한다.
 
-## 1. REST API  ##
+## Docker Swarm이란? ## 
 
-METHOD | PATH | DESCRIPTION 
-------------|-----|------------
-GET | /notice/ | 전체 알림정보 제공
-GET | /notice/{receiver_ID} | 해당 receiver 에 대한 알림 정보 제공
-GET | /notice/latest/{receiver_ID} | 해당 receiver 에 대한 최근 10개 알림정보 제공
-GET | /notice/previous/{receiver_ID}/{id} | 해당 receiver 에 대한 정보들 중 {id}값을 기준으로 이전 10개 정보 제공
-POST | /notice/ | 알림 정보 입력
-
-
-
-## 2. Project directory tree
-
-
-    .
-    ├── AlarmServiceApplication.java
-    ├── domain                    
-    │   ├── Notice.java           
-    ├── repository                        
-    │   ├── NoticeRepository.java         
-    ├── rest   
-    │   ├── NoticeController.java         
-    ├── service
-        ├── NoticeService.java          
-        └── NoticeServiceImpl.java      
-    
-    
-    
-## 3. dependency ##
-
-
-
-1. pom.xml에 eureka-client, hystrix, jpa, mysql-connector-java 추가 
-
-
-**pom.xml**
-
-
-```xml
-
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
-            <version>1.4.4.RELEASE</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
-        <dependency>
-             <groupId>org.springframework.boot</groupId>
-             <artifactId>spring-boot-starter-data-jpa</artifactId>
-             <version>2.0.1.RELEASE</version>
-        </dependency>
-
-        <dependency>
-              <groupId>mysql</groupId>
-              <artifactId>mysql-connector-java</artifactId>
-              <version>5.1.21</version>
-        </dependency>
-```
-2. dependency Management 추가 
-
-```xml
-        <dependencyManagement>
-                <dependencies>
-                        <dependency>
-                                <groupId>org.springframework.cloud</groupId>
-                                <artifactId>spring-cloud-dependencies</artifactId>
-                                <version>${spring-cloud.version}</version>
-                                <type>pom</type>
-                                <scope>import</scope>
-                        </dependency>
-                </dependencies>
-        </dependencyManagement>
-```
-
-3. docker build를 위한 dockerfile-maven-plugin, repository 추가 
-
-```xml
-
-        <build>
-                <plugins>
-                        <plugin>
-                                <groupId>org.springframework.boot</groupId>
-                                <artifactId>spring-boot-maven-plugin</artifactId>
-                        </plugin>
-
-            <plugin>
-                <groupId>com.spotify</groupId>
-                <artifactId>dockerfile-maven-plugin</artifactId>
-                <version>1.3.6</version>
-                <configuration>
-                    <repository>${docker.image.prefix}/${project.artifactId}</repository>
-                                <buildArgs>
-                                        <JAR_FILE>target/${project.build.finalName}.jar</JAR_FILE>
-                                </buildArgs>
-                </configuration>
-            </plugin>
-
-                        </plugins>
-                </build>
-
-        <repositories>
-                <repository>
-                        <id>spring-milestones</id>
-                        <name>Spring Milestones</name>
-                        <url>https://repo.spring.io/milestone</url>
-                        <snapshots>
-                                <enabled>false</enabled>
-                        </snapshots>
-                </repository>
-        </repositories>
-```
-
-## 4. resources ##
-
-bootstrap.yml file은 Spring cloud application에서 apllication.yml보다 먼저 실행된다. bootstrap.yml에서 db connection을 진행하고, apllication.yml에서 applicaion의 port와 eureka server instance의 정보를 포함시킨다.
-
-**1. bootstrap.yml**
-
-```xml
-spring:
-    application:
-        name: Alarm-service
-
-    jpa:
-      hibernate:
-        ddl-auto: update
-        show_sql: true
-        use_sql_comments: true
-        fotmat_sql: true
-
-    datasource:
-      url: jdbc:mysql://127.0.0.1:3306/notice
-      username: sangmin
-      password: tkdals12
-      driver-class-name: com.mysql.jdbc.Driver
-      hikari:
-        maximum-pool-size: 2
-
-    cloud:
-        config:
-            uri: ${CONFIG_SERVER_URL:http://127.0.0.1:8888}
-```
-
-**2. application.yml**
-
-```xml
-
-server:
-    port: 8763
-
-eureka:
-  client:
-    healthcheck: true
-    fetch-registry: true
-    serviceUrl:
-      defaultZone: ${vcap.services.eureka-service.credentials.uri:http://192.168.10.168:8761}/eureka/
-    instance:
-      statusPageUrlPath: https://${eureka.hostname}/info
-      healthCheckUrlPath: https://${eureka.hostname}/health
-      homePageUrl: https://${eurkea.hostname}/
-    preferIpAddress: true
-```
-
-## 4. JPA ##
-
-**JPA란?**
-
- JPA는 자바 진영의 ORM 기술 표준이다. Java Persistence API(JPA)는 RDB에 접근하기 위한 표준 ORM을 제공하고, 기존 EJB에서 제공하는 Entity Bean을 대체하는 기술이다. Hibernate, OpenJPA 와 같은 구현체들이 있고 이에 따른 표준 인터페이스가 JPA인 것이다.
-
-**ORM 이란?**
-
- 객체와 RDB를 매핑한다. 기존에 spring에서 많이 사용하던 mybatis등은 ORM이 아니고, SQL Query를 Mapping하여 실행한다.
-따라서 Spring-Data-JPA를 이용하면, 객체 관점에서 DB에 접근하는 형태로 어플리케이션을 개발할 수 있다.
-
-**JPA를 사용해야하는 이유는?**
-
-1. 생산성 => 반복적인 SQL 작업과 CRUD 작업을 개발자가 직접 하지 않아도 된다.
-2. 성능 => 캐싱을 지원하여 SQL이 여러번 수행되는것을 최적화 한다.
-3. 표준 => 표준을 알아두면 다른 구현기술로 쉽게 변경할 수 있다.
-
-**JPA Annotation**
-
-Annotaion | DESCRIPTION 
-----------|------------
-@Entity | Entity임을 정의한다.
-@Table | (name = "table name") , Mapping할 table 정보를 알려준다. 
-@id | Entity class의 필드를 table의 PK에 mapping한다.
-@Comlumn | field를 column에 매핑한다. 
+Docker Host Pool을 단일 가상 Docker Host로 전환해 준다. 
 
-@Comlumn annotaion은 꼭 필요한것은 아니다. 따로 선언해주지 않아도 기본적으로 멤버 변수명과 일치하는 DB의 Column을 mapping한다.
+공식문서는 "The cluster management and orchestration features embedded in the
+Docker Engine are built using swarmkit" 라고 말한다.
+ 
+한마디로 Docker Engine에 Embedded 되어있는 Cluster management, 오케스트레이션 툴이다.
 
-@Table annotaion또한 기본적으로 @Entity로 선언된 class의 이름과 실제 DB의 Table 명이 일치하는 것을 mapping한다.
+공식 문서에는 Docker verion이 1.12.0 이상이면 standalone swarm을 사용할 수 
+있다고 나와있다. 그러나 update를 recommend 한다고 말하고 있으므로 
+시작하기 전 Docker version을 update하자.
 
-## 4.1 JPA Entity ##
+먼저 각각의 Docker Host들은 swarm manager 또는 worker(service) 역할을 수행할 수 있다.
 
-SpringBoot에서는 JPA로 데이터를 접근하게끔 유도하고 있다. 
-
-아래는 JPA Entity를 담당할 Class이다. 
+그리고 Swarm은 swarm mode에서 실행되는 manager와 worker(swarm service)로 동작하는 
+여러 Docker hosts를 포함한다.
 
-**Notice.java**
-```java
-@Entity
-public class Notice {
+swarm service를 만들때 optimal state(복제본, 스토리지 리소스, 네트워크, 노출 포트) 등을
+정의할 수 있고, Docker 는 이 state를 유지하려고 한다.
 
-        @Id
-        @GeneratedValue(strategy=GenerationType.AUTO)
-        private int id;
-        private String receiver_id;
-        private String sender_id;
-        private int article_id;
+Docker Swarm은 여러 요소들로 구성되는데 이 요소들에 대해 간단하게 짚어보고 넘어가자.
+*구성 요소들에 대한 설명은 공식문서를 참고하여 작성하였다.*
 
-        protected Notice() {}
+1. swarm: 위에서도 설명했지만, 분산된 컨테이너를 실행 할 수 있는 클러스터이다.
 
-        public Notice(final int id, final String receiver_id, final String sender_id,final int article_id)
-        {
-                this.receiver_id=receiver_id;
-                this.sender_id=sender_id;
-                this.article_id=article_id;
-        }
+2. node란?
 
-        public int getId()
-        {
-                return id;
-        }
+- node란 swarm에 참여하는 docker engine의 인스턴스이다. 또한 이를 docker node라고 볼 수 있다. 
 
-        public String getReceiver_id()
-        {
-                return receiver_id;
-        }
-        public String getSender_id()
-        {
-                return sender_id;
-        }
+manager node와 worker node로 구성되고, manager node는 swarm cluster를 관리하는 node이다.
+worker node는 manager node의 명령을 받아 container를 서비스하는 node라 이해하면 된다.
 
-        public void setReceiver_id(String receiver_id)
-        {
-                this.receiver_id=receiver_id;
-        }
+하나의 computer나 클라우드 서버에서 하나 이상의 node를 실행 가능 하지만,
+일반적으로 swarm 배포에는 여러 클라우드 서버에 분산된 Docker node가 포함된다
 
-        public void setSender_id(String sender_id)
-        {
-                this.sender_id=sender_id;
-        }
+하나의 application을 swarm에 deploy하려면 service 정의를 manager에게 전달해야 한다.
+그리고 manager node는 task라는 작업 단위를 worker node에게 전달한다.
 
-        public int getArticle_id()
-        {
-                return article_id;
-        }
-        public void setArticle_id(int article_id)
-        {
-                this.article_id=article_id;
-        }
-        @Override
-        public String toString()
-        {
-                return String.format("Notice [id = %d ,receiver_id = '%s', sender_id = '%s', article_id = %d] ", id, receiver_id, sender_id, article_id);
+그리고 manager node는 원하는 swarm 상태를 유지하는데 필요한 orchestration 및
+cluster management 기능을 수행한다.
+ 
+그리고 manager node는 orchestration 을 수행할 node들의 leader를 뽑는다.
 
-        }
 
-}
-```
+위에서 설명한대로, manager node는 worker node에게 task를 전달하고 실행한다.
+default로, manager node는 service를 worker node에 실행하도록 하지만,  
+manager-only하게 service를 실행하도록 구성할 수 있다.
 
+3. Service and Task
 
-## 4.2 Repository ##  
+- service는, manager node 또는 worker node에서 실행되는 task의 정의이다.
 
-Entity class를 생성했다면, Repository Interface를 생성해야 한다. Spring에서는 Entity의 기본적 insert, delete, update 등이 가능하도록
-CrudRepository라는 interface를 제공한다.
+service를 create할때 container에서 사용할 image와 실행할 command를 지정한다.
 
-**NoticeRepository.java**
-```java
+replicate된 service 에서는 swarm manager가 설정한 비율에 따라 node사이에 특정 수의
+replicate task를 deploy한다.
 
-public interface NoticeRepository extends CrudRepository<Notice, String>{
+그리고 global service는, swarm cluster의 모든 node에서 service에 대한 하나의 task를 실행한다
+모든 node가 특정 service의 task를 할당 받는다는 얘기이다. 
 
+Manager node는 service scale에 설정된 replica 수 에 따라 task를 worker node에 할당한다.
+task가 node에 할당되면 다른 node로 이동할 수 없다.
 
-        @Query("SELECT n FROM Notice n WHERE receiver_id=:receiver_id ORDER BY id DESC")
-        List<Notice> findLatestNoticeByReceiverId(@Param("receiver_id") String title, Pageable pageable);
+4. Load balancing
 
-        @Query("SELECT n FROM Notice n WHERE n.receiver_id=:receiver_id AND n.id < :id ORDER BY n.id DESC")
-        List<Notice> findPreviousNoticeByReceiverId(@Param("receiver_id")String title, @Param("id") int id, Pageable pageable);
+swarm manager는 Load balancing을 통해 외부에서 사용할수 있도록 service를 swarm에 노출한다.
+swarm manager는 자동으로 service의 PublishedPort를 지정하거나, 따로 PublishedPort를
+지정할 수 있다.
+port를 따로 지정하지 않으면 30000 - 32767 범위의 port를 할당한다.
 
+swarm mode는 내부 DNS 구성요소를 가지고 있어, DNS 항목에 있는 각 서비스를 자동으로 할당한다.
+swarm manager는 내부 load balancing을 통해 service의 DNS 이름에 따라 
+cluster내의 service간 요청을 분산한다.
 
-}
-```
+지금까지 Docker Swarm의 개념과, 구성요소에 대해 살펴보았다.
 
-위 코드는 실제 Notice Entity를 이용하기 위한 Repository이다. 기본적인 CRUD외에 필자가 필요한 메소드를 @Query를 이용해 기존의 SQL처럼 사용하도록 지정해 놓은 상태이다.
+그럼 이제 Docker CLI를 통해 swarm을 만들고, swarm에 service application을 deploy 해보자.
+(공식 문서를 참고 하였고, 조금 다른 방향으로 진행해 보겠다)
 
-## 5. Service ## 
+진행 순서는 아래와 같다.
 
-이제 실제 필요한 Service interface를 만들어 볼 차례이다.
+1. intializing a cluster of Docker Engines in swarm mode
+2. adding nodes to the swarm
+3. deploying application services to the swarm
+4. managing the swarm once you have everything running
 
-    ├── rest   
-    │   ├── NoticeController.java         
-    ├── service
-        ├── NoticeService.java          
-        └── NoticeServiceImpl.java     
-        
-먼저 NoticeService.java 와 NoticeServiceImpl.java파일을 생성한다. NoticeService는 interface로 생성할 것이고, 이에대한 명세는 NoticeServiceImpl.java에서 구현한다.
+이 튜토리얼을 진행하기 위해서는 
 
-**NoticeService.java **
+1. 5개의 linux host
 
-```java
-public interface NoticeService {
+	- 하나의 manager와, 4개의 worker node로 구성 할 것이다.
 
-        List<Notice> findAllNotice();
-        List<Notice> findAllNoticeByReceiverId(String receiver_id);
-        List<Notice> findLatestNoticeByReceiverId(String receiver_id);
-        List<Notice> findPreviousNoticeByReceiverId(String receiver_id, int id);
-        Notice saveNotice(Notice notice);
+2. Docker Engine 1.12 or later installed 
 
-}
-```
+	- install Docker Engine on Linux machines
+	  리눅스 기반의 OS를 사용중이면, 공식 document의 install instruction을 보면 됨.
+	  이미 docker 가 설치되어져 있다면 skip하자
 
-**NoticeServiceImpl.java 일부**
+3. the IP address of the manager machine
 
-```java
-@Service("noticeService")
-public class NoticeServiceImpl implements NoticeService{
+	- IP address는 고정 ip로 할당되어져 있어야 한다.
+	- swarm에 속한 모든 node는 IP에 의해 manager에 connect 되어야한다.
 
-        private final Logger logger = LoggerFactory.getLogger(this.getClass());
+4. open ports between the hosts
 
-        private List<Notice> result;
+	- TCP port 2377 - for cluster management communications
+	- TCP and UDP port 7946 - for communication among nodes
+	- UDP port 4789 for overlay network traffic
 
-        @Autowired
-        private NoticeRepository noticeRepository;
+이 port들은 docker 설치시 자동으로 열리게 되는걸로 알고있다. 
 
-        @Override
-        public List<Notice> findAllNotice()
-        {
-                List<Notice> AllNotice = new ArrayList<>();
+혹시 모르니 $netstat -tnlp | grep LISTEN 으로 확인해보자
 
-                Iterable<Notice> allNoticeIter = noticeRepository.findAll();
 
-                Consumer<Notice> noticeList = (notice) -> {
-                        AllNotice.add(notice);
-                };
+이제 Swarm을 만들어보자.
+Docker Engine daemon이 host machine에서 작동중인지 확인해라
 
-                allNoticeIter.forEach(noticeList);
+공식 문서에는 docker-machine을 이용해서 manager node를 실행시키고 ssh로 machine에 접속하라는 형태로 쓰여 있는데
 
-                return AllNotice;
-        }
-
-        @Override
-        public List<Notice> findAllNoticeByReceiverId(String receiver_id)
-        {
-                result = new ArrayList<>();
-
-                Iterable<Notice>notiIter = noticeRepository.findAll();
-
-                notiIter.forEach(result::add);
-                List<Notice> matchingResult = result.stream()
-                                              .filter(receiver-> receiver.getReceiver_id()
-                                              .equals(receiver_id))
-                                              .collect(Collectors.toList());
-                return matchingResult;
-        }
-
-        @Override
-        public List<Notice> findLatestNoticeByReceiverId(String receiver_id)
-        {
-                return noticeRepository.findLatestNoticeByReceiverId(receiver_id,PageRequest.of(0, 10));
-        }
-```
-
-## 6. Rest Controller ## 
-
-이제 API를 만들어 보자. rest package를 따로 만들고 그곳에 RestController들을 정의한다.
-
-    ├── rest   
-    │   ├── NoticeController.java 
-    
-위처럼 NoticeController.java를 만들고, @RestControler annotation을 설정하여 RestController를 만든다.
-
-**NoticeController.java 일부**
-
-
-```java
-@RestController
-public class NoticeController {
-
-        private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    public static List<Notice> Temp;
-
-        @Autowired
-        private NoticeService noticeService;
-
-        @RequestMapping(value = "/notice", method=RequestMethod.GET)
-        public ResponseEntity<List<Notice>> getAllNotice(){
-
-                final List<Notice> allMembers = noticeService.findAllNotice();
-
-                if (allMembers.isEmpty()) {
-                        return new ResponseEntity<List<Notice>>(HttpStatus.NO_CONTENT);
-                }
-
-                return new ResponseEntity<List<Notice>>(allMembers, HttpStatus.OK);
-        }
-
-        @RequestMapping(value="/notice/{receiver_id}", method = RequestMethod.GET)
-        public ResponseEntity<List<Notice>> getAllNoticeByReceiverId(@PathVariable("receiver_id") final String receiver_id)
-        {
-
-                final List<Notice> selectedNotice = noticeService.findAllNoticeByReceiverId(receiver_id);
-
-                if (selectedNotice.isEmpty())
-                {
-                        logger.info("404 Not Found"); ;
-                        return new ResponseEntity<List<Notice>>(HttpStatus.NOT_FOUND);
-                }
-
-                return new ResponseEntity<List<Notice>>(selectedNotice, HttpStatus.OK);
-
-        }
-        
-        @RequestMapping(value="/notice/latest/{receiver_id}",method = RequestMethod.GET)
-        public ResponseEntity<List<Notice>> getLastNoticeByReceiverId(@PathVariable("receiver_id") final String receiver_id)
-        {
-
-                final List<Notice> LastNotice = noticeService.findLatestNoticeByReceiverId(receiver_id);
-
-                if(LastNotice.isEmpty())
-                {
-                        logger.info("GetLastNoriceByReceiverId, 404 Not Found");
-                        return new ResponseEntity<List<Notice>>(HttpStatus.NOT_FOUND);
-
-                }
-
-                return new ResponseEntity<List<Notice>>(LastNotice , HttpStatus.OK);
-        }
-        
-        @RequestMapping(value="/notice/previous/{receiver_id}/{id}",method = RequestMethod.GET)
-        public ResponseEntity<List<Notice>> getPreviousNoticeByReceiverId(@PathVariable("receiver_id") final String receiver_id,   @PathVariable("id") final int id)
-        {
-
-                final List<Notice> PreviousNotice = noticeService.findPreviousNoticeByReceiverId(receiver_id,id);
-
-                if(PreviousNotice.isEmpty())
-                {
-                        logger.info("GetPreviousNoticeByReceiverId, 404 Not Found");
-                        return new ResponseEntity<List<Notice>>(HttpStatus.NOT_FOUND);
-
-                }
-
-                return new ResponseEntity<List<Notice>>(PreviousNotice , HttpStatus.OK);
-        }
-
-```
-
-## 7. docker build ## 
-
-이제 docker image를 만들어 볼 차례이다. 먼저 jar파일을 생성하고 Dockerfile을 추가한다.
-
-> -       $mvn package 
-
-
-**Dockerfile**
-```
-     FROM openjdk:8-jdk-alpine
-     VOLUME /tmp
-     ARG JAR_FILE
-     ADD ${JAR_FILE} app.jar
-     ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
-```
-
-
-이제 docker image를 빌드한다. 
-
-> -       $mvn dockerfile:build
-
-빌드가 완료 되었다면 $docker images 명령어를 통해 docker image를 확인할 수 있다. 
-
-
-### 이상으로 Spring Cloud Netflix의 여러 instance를 이용해 MSA 구축에 필요한 Service를 API Server형태로 구현해 보았다. ###
-
+linux host라면 docker-machine 구성이 필요 없다.
 
