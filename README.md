@@ -1,6 +1,6 @@
-Docker Swarm
-==============
-
+Docker Swarm  
+============
+*by S.M.Lee*
 
 ![image](https://user-images.githubusercontent.com/20153890/40530348-64a73fb4-6033-11e8-8df2-758a42b3fdaa.png)
 
