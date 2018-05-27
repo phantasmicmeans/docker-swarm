@@ -8,13 +8,13 @@ Docker Swarm
 
 
  서버 오케스트레이션을 간단하게 정의하면 "여러 서버와 서비스를 편리하게 관리하는 작업" 이라 볼 수 
-있을 것이다. 뭐 간단하게 말하면 이런 형태지만 scheduling, clustering, service discovery, loggin, monitoring 등
+있을 것이다. 뭐 간단하게 말하면 이런 형태지만 scheduling, clustering, service discovery, logging, monitoring 등
 여러 작업을 해야한다.
 
 많은 수의 서버들이 전부 Docker Container로 띄워져 있고, 이 Docker Host들을 
 엮어서 마치 하나의 서버처럼 다루고 많은 것을 자동화 한다면 관리적인 측면에 있어 좋지 않을까?
 
-여기서는 Clustering Tool, 즉 Container Orchestration Tool(대표적 Kubernetes) 하나인 Docker Swarm에 대해 알아보겠다.
+여기서는 Clustering Tool, 즉 Container Orchestration Tool(대표적 Kubernetes)중 하나인 Docker Swarm에 대해 알아보겠다.
 
 본래 Orchestration Tool은 수백, 수천대의 서버들을 관리하기 위한 목적으로 만들어졌기에 
 적은 양의 서버를 관리하기 위해 Orchestration Tool을 도입하는 것은 비용적인 부분이나, 인적 자원 낭비라고도 볼 수 있지만..
@@ -36,8 +36,10 @@ Docker Engine are built using swarmkit"** 라고 말한다.
 시작하기 전 docker version을 update하자.
 
 먼저 각각의 docker host들은 swarm manager 또는 worker(service) 역할을 수행할 수 있다.
-그리고 Swarm은 swarm mode에서 실행되는 manager와 worker(swarm service)로 동작하는 
-여러 Docker hosts를 포함한다.
+그리고 Swarm은 swarm mode에서 실행되는 manager와 worker(swarm service) 즉, 여러 Docker hosts를 포함한다.
+
+뭐 간단하게 말하자면 swarm은 여러 노드들로 이루어지는데, service를 실행 할 worker node와, 이들을 관리할 manager node로 이루어 진다는 얘기이다.
+아래에서 다시 설명하겠지만, worker node에 service를 deploy하게 된다. 
 
 swarm service를 만들때 optimal state(복제본, 스토리지 리소스, 네트워크, 노출 포트) 등을
 정의할 수 있고, Docker 는 이 state를 유지하려고 한다.
@@ -60,11 +62,11 @@ worker node는 manager node의 명령을 받아 container를 서비스하는 nod
 하나의 computer나 cloud 서버에서 하나 이상의 node를 실행 가능 하지만,
 일반적으로 swarm 배포에는 여러 클라우드 서버에 분산된 docker node가 포함된다
 
-하나의 application을 swarm에 deploy하려면 service 정의를 manager에게 전달해야 한다.
+하나의 application(service)을 swarm에 deploy하려면 service 정의를 manager에게 전달해야 한다.
 그리고 manager node는 task라는 작업 단위를 worker node에게 전달한다.
  manager node는 원하는 swarm 상태를 유지하는데 필요한 orchestration 및
 cluster management 기능을 수행한다.
-또한 manager node는 orchestration 을 수행할 node들의 leader를 뽑는다.
+또한 manager node는 orchestration 을 수행할 node들의 leader 역할을 할 것이다.
 
 위에서 설명한대로, manager node는 worker node에게 task를 전달하고 실행시킨다.
 default로, manager node는 service를 worker node에 실행하도록 하지만 manager-only하게 service를 실행하도록 구성할 수 있다.
@@ -73,18 +75,20 @@ default로, manager node는 service를 worker node에 실행하도록 하지만 
 
 service는, manager node 또는 worker node에서 실행되는 task의 정의이다. 
 service를 create할때 container에서 사용할 image와 실행할 command를 지정한다.
-replicate된 service 에서는 swarm manager가 설정한 비율에 따라 node사이에 특정 수의
+
+또한 service를 여러개로 replicate하여 이를 하나의 node에 전부 deploy할 수도 있고, 여러개의 node에 deploy 또한 할 수 있다.
+replicate된 service에서는 swarm manager가 설정한 비율에 따라 node사이에 특정 수의
 replicate task를 deploy한다.
 
-그리고 global service는, swarm cluster의 모든 node에서 service에 대한 하나의 task를 실행한다
+그리고 global service는 swarm cluster의 모든 node에서 service에 대한 하나의 task를 실행하게 한다.
 모든 node가 특정 service의 task를 할당 받는다는 얘기이다. 
 
-Manager node는 service scale에 설정된 replica 수 에 따라 task를 worker node에 할당한다.
+manager node는 service scale에 설정된 replica 수 에 따라 task를 worker node에 할당한다.
 task가 node에 할당되면 다른 node로 이동할 수 없다.
 
 ### 4. Load balancing 
 
-swarm manager는 Load balancing을 통해 외부에서 사용할수 있도록 service를 swarm에 노출한다.
+swarm manager는 load balancing을 통해 외부에서 사용할 수 있도록 service를 swarm에 노출한다.
 
 swarm manager는 자동으로 service의 PublishedPort를 지정하거나, 따로 PublishedPort를 지정할 수 있다.
 port를 따로 지정하지 않으면 30000 - 32767 범위의 port를 할당한다.
