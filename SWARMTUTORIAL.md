@@ -5,11 +5,12 @@ Docker Swarm Tutorial
 ![image](https://user-images.githubusercontent.com/20153890/40535846-41728da2-6045-11e8-87c7-e301beac3c46.png)
 
 Orchestration과 Docker Swarm에 대해 알아보았고, Component 또한 어느정도 이해가 되었을 것이라 생각한다.
-그럼 이제 Swarm을 구성하여 보고, service를 deploy 하자.
+그럼 이제 Swarm을 구성하여 보고, service를 deploy 해보자.
 
 # Swarm Tutorial #
 
 그럼 이제 Docker CLI를 통해 swarm을 만들고, swarm에 service application을 deploy 해보자.
+
 *공식 문서를 참고 하였고, 조금 다른 방향으로 진행해 보겠다*
 
 **NOTE**
@@ -65,8 +66,7 @@ manager node로 사용할 linux host server에 위 command를 실행한다. [MAN
 
 --advertise-addr flag는 manager node가 자신의 address를 192.168.10.174로 게시하도록 한다.
 
-실행 결과, 중간에 새로운 node가 swarm에 join할수 있는 command(token을 포함한)를 포함하고 있다. 또 다른 node는 manager나 worker로 swarm에 join할 것이고, 
-중간에 나와있는 docker swarm join --token ~~ command를 node로 지정할 server에서 실행시키면 된다.
+실행 결과, 중간에 새로운 node가 swarm에 join할수 있는 command(token을 포함한)를 포함하고 있다. 또 다른 node는 manager나 worker로 swarm에 join할 수 있다. 여기서는 4개의 node들이 worker node로 swarm에 join할 것이므로 중간에 나와있는 **docker swarm join --token ~~ command**를 worker node로 지정할 server에서 실행시키면 된다.
 
 ### 2. adding nodes to the swarm
 
