@@ -20,7 +20,6 @@ Orchestration과 Docker Swarm에 대해 알아보았고, Component 또한 어느
  1. intializing a cluster of Docker Engines in swarm mode
  2. adding nodes to the swarm
  3. deploying application services to the swarm
- 4. managing the swarm once you have everything running
 ##
 
 이 튜토리얼을 진행하기 위해서는 
@@ -188,7 +187,6 @@ eureka service와 api-gateway service가 3개의 replica를 가지고 각각 eur
 
 worker node로 사용하고 있는 server에서 cotainer의 상태를 확인하여도 된다. eureka service로 활용하고 있는 server에서 container의 상태를 확인하여 보겠다. 다음 command를 eureka service를 deploy한 worker node server에서 실행한다.
 
-
 ```bash
 [sangmin@eureka ~]$ docker ps
 CONTAINER ID        IMAGE                                  COMMAND                  CREATED             STATUS              PORTS               NAMES
@@ -197,9 +195,15 @@ CONTAINER ID        IMAGE                                  COMMAND              
 c302798d830f        phantasmicmeans/eureka_server:latest   "java -Djava.securit…"   3 days ago          Up 3 days                               eureka.3.r3bm3mrzb7lx1f5m3az8grn3b
 ```
 
-위처럼 3개의 eureka replica container가 실행되고 있는 것 을 볼 수 있을 것이다.
+위처럼 3개의 eureka replicated 되어진 container가 실행되고 있는 것을 볼 수 있을 것이다.
 
-### 4. managing the swarm once you have everything running
+***Conclusion***
+
+지금까지 docker-swarm을 활용해 여러 service를 container에 적용해 보았고, 이 cluster에 node들을 포함시키고 각 node 들에 여러 service를 deploy 해 보았다.
+
+docker-swarm은 기능적인 측면이나 활용도 측면에서 kubernetes에 비해 다소 낮게 평가 된다. 그러나 사용 방법도 쉽고 구축 비용도 적으므로 규모가 크지 않은 container를 관리하는 데에는 docker-swarm이 가장 잘 어울리지 않을까 라는 생각을 하게 된다.
+
+
 
 
 
