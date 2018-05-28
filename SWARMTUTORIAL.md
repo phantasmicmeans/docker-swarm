@@ -81,3 +81,12 @@ worker node로 사용할 4개의 Server에서 command를 실행 후, 4개의 wor
 
 MANAGER STATUS column을 확인하면, Leader로 지정된 node를 확인할 수 있다. 이는 manager node임을 뜻한다.
 그리고 4개의 worker node가 추가되어져 있는 것을 확인할 수 있을 것이다. 
+
+ ### 3. deploying application services to the swarm
+ 
+ swarm에 manager node와 worker node들을 추가하였으므로, service들을 swarm에 추가해보자.
+ service deploy는 manager node server에서 진행해야 한다. 
+
+ service는 docker image를 받아와서 사용하는데, 여기서는 필자가 만들어놓은 여러 docker image들을 사용할 것이다.
+ Spring API와 NodeJS API
+ ### 4. managing the swarm once you have everything running
