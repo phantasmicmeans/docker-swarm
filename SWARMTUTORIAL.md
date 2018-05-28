@@ -88,13 +88,13 @@ MANAGER STATUS column을 확인하면, Leader로 지정된 node를 확인할 수
 
 노란박스로 둘러 쌓여진 service들을 swarm에 deploy할 예정이다. 위의 service들은 MSA형태로 이루어진 서비스 들이고, API Gateway, 알림 Service, Service Discovery(eureka) 는 Spring Boot Project이고, 게시판 관리 Service는 NodeJS Service이다. 그림에선 볼 수 없지만, 게시판 관리 Service는 Spring Boot로 되어져 있는 API Gateway와 연결되기 위해 중간에 Spring-Cloud-Sidecar라는 또 하나의 Tomcat이 떠 있는 상태이다. 이렇게 하여 총 5개의 Service를 생성 할 것이다. 이 5개의 service는 docker image로 만들어 필자의 docker-hub에 올려 놓았고, 이 image들을 받아와 service로 deploy할 예쩡이다.
 
-사실 Docker Swarm은 ingress라는 가상 network에 속해 있다. ingress에는 Routing Mesh라는 기능을 제공한다. 공식 문서에는 **All nodes participate in an ingress routing mesh. The routing mesh enables each node in the swarm to accept connections on published ports for any service running in the swarm, even if there’s no task running on the node. The routing mesh routes all incoming requests to published ports on available nodes to an active container.** 라고 설명한다. service가 port를 열 경우, swarm에 속한 전체 node에 그 port가 열리게 되고, 어떠한 node의 port에 요청을 보내도 실행중인 container에 자동으로 전달해준다. 따라서 API Gateway가 굳이 필요하진 않다. 그러나 여기서는 service를 각 node들에 deploy하는게 목적이므로 신경쓰지 않고 진행하도록 하겠다.
+사실 Docker Swarm은 ingress라는 가상 network에 속해 있다. ingress에는 Routing Mesh라는 기능을 제공한다. 공식 문서에는 **All nodes participate in an ingress routing mesh. The routing mesh enables each node in the swarm to accept connections on published ports for any service running in the swarm, even if there’s no task running on the node. The routing mesh routes all incoming requests to published ports on available nodes to an active container.** 라고 설명한다.
+
+service가 port를 열 경우, swarm에 속한 전체 node에 그 port가 열리게 되고, 어떠한 node의 port에 요청을 보내도 실행중인 container에 자동으로 전달해준다. 따라서 API Gateway가 굳이 필요하진 않다. 그러나 여기서는 service를 각 node들에 deploy하는게 목적이므로 신경쓰지 않고 진행하도록 하겠다.
 
 이전 단계에서 swarm에 manager node와 worker node들을 추가하였으므로, service들을 swarm에 추가해보자.
-service deploy는 manager node server에서 진행해야 한다. 
+service deploy는 manager node server에서 진행해야 한다. service는 위에서도 설명했다시피 docker image를 받아와 실행 할 것이다. 
 
-service는 위에서도 설명했다시피 docker image를 받아와 실행 할 것이다. 
 정리해보면 API Gateway, 알림 Service(Spring Boot), Service Discovery(eureka), 게시판 관리 Service(NodeJS), Spring-Cloud-Sidecar 까지 총 5개의 service를 docker hub에서 image로 받아와 service를 swarm에 deploy하겠다.
-
 
 ### 4. managing the swarm once you have everything running
