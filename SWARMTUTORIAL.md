@@ -84,6 +84,12 @@ MANAGER STATUS column을 확인하면, Leader로 지정된 node를 확인할 수
 
  ### 3. deploying application services to the swarm
  
+ ![image](https://user-images.githubusercontent.com/20153890/40592779-00e63ebc-625e-11e8-8983-8f39f9122083.png)
+
+노란박스로 둘러 쌓여진 service들을 swarm에 deploy할 예정이다. 위의 service들은 MSA형태로 이루어진 서비스 들이고, API Gateway, 알림 Service, Service Discovery(eureka) 는 Spring Boot Project이고, 게시판 관리 Service는 NodeJS Service이다. 그림에선 볼 수 없지만, 게시판 관리 Service는 Spring Boot로 되어져 있는 API Gateway와 연결되기 위해 중간에 Spring-Cloud-Sidecar라는 또 하나의 Tomcat이 떠 있는 상태이다. 이렇게 하여 총 5개의 Service를 생성 할 것이다. 
+
+사실 Docker Swarm은 ingress라는 가상 network에 속해 있어 API Gateway가 굳이 필요하진 않다. 그러나 여기서는 service를 각 node들에 deploy하는게 목적이므로 신경쓰지 않고 진행하도록 하겠다.
+
  swarm에 manager node와 worker node들을 추가하였으므로, service들을 swarm에 추가해보자.
  service deploy는 manager node server에서 진행해야 한다. 
 
