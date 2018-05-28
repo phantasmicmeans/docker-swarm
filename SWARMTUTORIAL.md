@@ -48,8 +48,21 @@ Orchestration과 Docker Swarm에 대해 알아보았고, Component 또한 어느
 
 이 2377, 7946 port는 설치시 자동으로 열려 있을 것이다(내 경우엔..). 혹시 모르니 $netstat -tnlp | grep LISTEN 으로 확인해보자
 
-![image](https://user-images.githubusercontent.com/20153890/40533128-b3342792-603c-11e8-8988-5a7d6ab31280.png)
+```bash
+[root@was sangmin]# netstat -tnlp | grep LISTEN
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      27257/sshd
+tcp        0      0 127.0.0.1:25            0.0.0.0:*               LISTEN      1563/master
+tcp6       0      0 :::2377                 :::*                    LISTEN      25382/dockerd
+tcp6       0      0 :::7946                 :::*                    LISTEN      25382/dockerd
+tcp6       0      0 :::22                   :::*                    LISTEN      27257/sshd
+tcp6       0      0 :::3000                 :::*                    LISTEN      25382/dockerd
+tcp6       0      0 :::8761                 :::*                    LISTEN      25382/dockerd
+tcp6       0      0 ::1:25                  :::*                    LISTEN      1563/master
+tcp6       0      0 :::8763                 :::*                    LISTEN      25382/dockerd
+tcp6       0      0 :::8766                 :::*                    LISTEN      25382/dockerd
+tcp6       0      0 :::4000                 :::*                    LISTEN      25382/dockerd
 
+```
 
 ## Swarm
 
@@ -75,7 +88,16 @@ swarm에 join시킬 command를 잊었다면, $docker swarm join-token manager를
 
 worker node로 사용할 4개의 Server에서 command를 실행 후, 4개의 worker node가 swarm에 join 되었다면, manager node server에서 다음 명령어를 실행하자.
 
-> - $docker node ls 
+
+```bash
+[sangmin@was ~]$ docker node ls
+ID                            HOSTNAME            STATUS              AVAILABILITY        MANAGER STATUS      ENGINE VERSION
+vcjedw7k4op88iyl7hfvn2e9p     alarm               Ready               Active                                  18.03.1-ce
+e4q1vt62gdrj32ak5k0k7vfzc     apitest             Ready               Active                                  18.03.0-ce
+wngppkcnkviiqludqz7d1kdg6     boardapi            Ready               Active                                  18.03.1-ce
+o4oinwydtft38p8o4dv2bhco1     eureka              Ready               Active                                  18.03.1-ce
+peqjhis6oskrtb9oftne2dx49 *   was                 Ready               Active              Leader              18.03.1-ce
+```
 
 ![image](https://user-images.githubusercontent.com/20153890/40535271-918f8dc8-6043-11e8-86da-4219bf45cfeb.png)
 
@@ -127,8 +149,6 @@ manager node server에서 위 command를 실행하면 된다.
 
 모든 service가 정상적으로 각 worker node에 deploy 되었다면 manager node server에서 다음과 같은 command를 실행해 보자.
 
-> - $docker service ls
-
 ```bash
 [sangmin@was ~]$ docker service ls
 ID                  NAME                    MODE                REPLICAS            IMAGE                                          PORTS
@@ -143,7 +163,7 @@ smw41buddyiz        eureka                  replicated          3/3             
 
 그럼 이제 지정해준 worker node에 제대로 deploy 되었는지 확인해보자
 
-> - $docker service ps eureka 
+***eureka service***
 
 ```bash
 [sangmin@was ~]$ docker service ps eureka
@@ -153,7 +173,7 @@ m0cgt4sjjbji        eureka.2            phantasmicmeans/eureka_server:latest   e
 r3bm3mrzb7lx        eureka.3            phantasmicmeans/eureka_server:latest   eureka              Running             Running 3 days ago    
 ```
 
-> - $docker service ps api-gateway 
+***api-gateway service***
 
 ```bash
 [sangmin@was ~]$ docker service ps api-gateway
@@ -168,7 +188,6 @@ eureka service와 api-gateway service가 3개의 replica를 가지고 각각 eur
 
 worker node로 사용하고 있는 server에서 cotainer의 상태를 확인하여도 된다. eureka service로 활용하고 있는 server에서 container의 상태를 확인하여 보겠다. 다음 command를 eureka service를 deploy한 worker node server에서 실행한다.
 
-> - $docker ps
 
 ```bash
 [sangmin@eureka ~]$ docker ps
