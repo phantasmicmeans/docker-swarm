@@ -83,7 +83,7 @@ manager node로 사용할 linux host server에 위 command를 실행한다. [MAN
 ### 2. adding nodes to the swarm
 
 여기서는 4개의 worker node를 사용할 것이므로 worker로 사용 예정 중인 linux host server 4개에 각각 docker swarm join --token ~~ command를 실행하면 된다.
-swarm에 join시킬 command를 잊었다면, $docker swarm join-token manager를 manager node server에서 실행하면 확인할 수 있다.
+swarm에 join시킬 command를 잊었다면, $docker swarm join-token (manager or worker)를 manager node server에서 실행하면 확인할 수 있다.
 
 worker node로 사용할 4개의 Server에서 command를 실행 후, 4개의 worker node가 swarm에 join 되었다면, manager node server에서 다음 명령어를 실행하자.
 
