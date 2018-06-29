@@ -9,7 +9,7 @@ Orchestration과 Docker Swarm에 대해 알아보았고, Component 또한 어느
 
 # Swarm Tutorial #
 
-그럼 이제 Docker CLI를 통해 swarm을 만들고, swarm에 service application을 deploy 해보자.
+그럼 이제 docker cli를 통해 swarm을 만들고, swarm에 service를 deploy 해보자.
 
 *공식 문서를 참고 하였고, 조금 다른 방향으로 진행해 보겠다*
 
@@ -36,7 +36,7 @@ Orchestration과 Docker Swarm에 대해 알아보았고, Component 또한 어느
 
 ### 3. the IP address of the manager machine
 
-   - IP address는 고정 ip로 할당되어 있어야 한다.
+   - IP address는 고정 ip가 할당되어 있어야 한다.
    - swarm에 속한 모든 node는 IP에 의해 manager에 connect 되어야 한다.
 
 ### 4. open ports between the hosts
@@ -45,34 +45,18 @@ Orchestration과 Docker Swarm에 대해 알아보았고, Component 또한 어느
    - TCP and UDP port 7946 - for communication among nodes
    - UDP port 4789 for overlay network traffic
 
-이 2377, 7946 port는 설치시 자동으로 열려 있을 것이다(내 경우엔..). 혹시 모르니 $netstat -tnlp | grep LISTEN 으로 확인해보자
 
-```bash
-[root@was sangmin]# netstat -tnlp | grep LISTEN
-tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      27257/sshd
-tcp        0      0 127.0.0.1:25            0.0.0.0:*               LISTEN      1563/master
-tcp6       0      0 :::2377                 :::*                    LISTEN      25382/dockerd
-tcp6       0      0 :::7946                 :::*                    LISTEN      25382/dockerd
-tcp6       0      0 :::22                   :::*                    LISTEN      27257/sshd
-tcp6       0      0 :::3000                 :::*                    LISTEN      25382/dockerd
-tcp6       0      0 :::8761                 :::*                    LISTEN      25382/dockerd
-tcp6       0      0 ::1:25                  :::*                    LISTEN      1563/master
-tcp6       0      0 :::8763                 :::*                    LISTEN      25382/dockerd
-tcp6       0      0 :::8766                 :::*                    LISTEN      25382/dockerd
-tcp6       0      0 :::4000                 :::*                    LISTEN      25382/dockerd
-
-```
 
 ## Swarm
 
 공식 문서에는 docker-machine을 이용해서 manager node를 실행시키고 ssh로 machine에 접속하라는 형태로 쓰여 있는데
-linux host라면 docker-machine 구성이 필요 없다.
+linux host라면 docker-machine 구성없이 진행해도 된다.
 
 ### 1. intializing a cluster of Docker Engines in swarm mode
 
 > - $docker swarm init --advertise-addr [MANAGER-IP]
 
-manager node로 사용할 linux host server에 위 command를 실행한다. [MANAGER-IP] 부분에 manager node로 사용할 IP를 입력하면 된다.
+manager node로 사용할 linux host server에 위 command를 실행한다. [MANAGER-IP] 부분에 manager node로 사용할 IP(를 입력하면 된다.
 
 ![image](https://user-images.githubusercontent.com/20153890/40534751-0bfa467c-6042-11e8-80cb-4ad6b612a9ec.png)
 
